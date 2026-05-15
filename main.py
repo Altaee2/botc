@@ -62,7 +62,7 @@ def create_pdf(chat_id, code, inputs, result):
 # --- الأزرار والقوائم ---
 def main_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add(types.KeyboardButton("📚 المكتبة التعليمية"), types.KeyboardButton("🗑️ مسح الجلسة"))
+    markup.add(types.KeyboardButton("🗑️ مسح الجلسة"))
     return markup
 
 @bot.message_handler(commands=['start'])

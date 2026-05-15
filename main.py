@@ -47,7 +47,7 @@ def create_pdf(chat_id, code, inputs, result):
     pdf.multi_cell(0, 7, txt=result)
     
     pdf.ln(15)
-    pdf.set_font("Arial", 'I', 8)
+    pdf.set_font("Arial", 'B', 16)
     pdf.cell(0, 10, txt=f"Developer: {MY_CHANNEL} | Web: {MY_WEBSITE} || @Execut_C_Bot", align='C')
     
     pdf_path = os.path.join(BASE_DIR, f"Report_{chat_id}.pdf")

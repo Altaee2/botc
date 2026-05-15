@@ -6,7 +6,7 @@ import re
 from fpdf import FPDF
 
 # 🔧 إعدادات البوت الأساسية
-API_TOKEN = '6418845303:AAFNx_TT6oRMUv8lLhMpeqAmTO_L1516ymY'
+API_TOKEN = '8884141366:AAE01llBmMCrh82S7cOPIxkFAkxrbokoIL4'
 bot = telebot.TeleBot(API_TOKEN)
 
 BASE_DIR = r"C:\Users\Ali Altaee\Downloads\cc" 

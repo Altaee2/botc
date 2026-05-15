@@ -47,7 +47,7 @@ def create_pdf(chat_id, code, inputs, result):
     pdf.multi_cell(0, 7, txt=result)
     
     pdf.ln(15)
-    pdf.set_font("Arial", 'B', 16)
+    pdf.set_font("Arial", 'B', 10)
     pdf.cell(0, 10, txt=f"Developer: {MY_CHANNEL} | Web: {MY_WEBSITE} || @Execut_C_Bot", align='C')
     
     pdf_path = os.path.join(BASE_DIR, f"Report_{chat_id}.pdf")
@@ -62,7 +62,7 @@ def main_menu():
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.send_message(message.chat.id, f"👋 أهلاً بك يا علي.\nأرسل كود C++ وسأقوم بإنشاء تقرير PDF كامل.", reply_markup=main_menu())
+    bot.send_message(message.chat.id, f"👋 أهلاً بك يا علي.\nأرسل كود C++ وسأقوم بإنشاء تقرير PDF كامل.\n ملاحظة توجد مشكلة في المخرج الواحد سيتم حلها قريبًا ... \n المطور {MY_CHANNEL} \n {MY_WEBSITE}", reply_markup=main_menu())
 
 @bot.message_handler(func=lambda message: message.text == "🗑️ مسح الجلسة")
 def clear(message):

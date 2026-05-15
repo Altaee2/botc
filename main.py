@@ -48,7 +48,7 @@ def create_pdf(chat_id, code, inputs, result):
     
     pdf.ln(15)
     pdf.set_font("Arial", 'I', 8)
-    pdf.cell(0, 10, txt=f"Developer: {MY_CHANNEL} | Web: {MY_WEBSITE}", align='C')
+    pdf.cell(0, 10, txt=f"Developer: {MY_CHANNEL} | Web: {MY_WEBSITE} || @Execut_C_Bot", align='C')
     
     pdf_path = os.path.join(BASE_DIR, f"Report_{chat_id}.pdf")
     pdf.output(pdf_path)
@@ -118,10 +118,10 @@ def compile_and_run_cpp(chat_id, code, inputs_data=None):
         run_res = subprocess.run([file_exe], input=inputs_data, capture_output=True, text=True, shell=True, timeout=10)
         
         output = run_res.stdout
-        #for p in re.findall(r'cout\s*<<\s*"(.*?)";', code): output = output.replace(p, "")
+        for p in re.findall(r'cout\s*<<\s*"(.*?)";', code): output = output.replace(p, "")
 
         result_text = output.strip() if output.strip() else "Executed successfully."
-        bot.send_message(chat_id, f"💻 <b>النتيجة:</b>\n<pre>{result_text}</pre>", parse_mode="HTML")
+        bot.send_message(chat_id, f"💻 <b>النتيجة:</b>\n<pre>{result_text}</pre>\n تم بواسطة بوت @Execut_C_Bot", parse_mode="HTML")
 
         pdf_path = create_pdf(chat_id, code, inputs_data, result_text)
         with open(pdf_path, 'rb') as f:

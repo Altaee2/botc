@@ -110,44 +110,46 @@ def compile_and_run_cpp(chat_id, code, inputs_data=None):
         # 1. عملية الكومبايل
         compile_cmd = f"g++ {file_cpp} -o {file_exe}"
         if subprocess.run(compile_cmd, shell=True, capture_output=True).returncode != 0:
-            bot.send_message(chat_id, "❌ خطأ في الكومبايل.")
+            bot.send_message(chat_id, "❌ خطأ في الكومبايل. تأكد من الكود المكتوب.")
             return
 
-        # 2. تشغيل الكود والحصول على المخرجات
-        # أضفنا الصلاحيات لضمان التشغيل في Linux
-        os.chmod(file_exe, 0o777) 
-        run_res = subprocess.run([f"./{file_exe}"], input=inputs_data, capture_output=True, text=True, shell=True, timeout=10)
+        # 2. تشغيل الكود (إضافة ./ للأنظمة السحابية)
+        os.chmod(file_exe, 0o777) # إعطاء صلاحيات التشغيل
+        run_res = subprocess.run(f"./{file_exe}", input=inputs_data, capture_output=True, text=True, shell=True, timeout=10)
         
-        full_output = run_res.stdout
+        raw_output = run_res.stdout
         
-        # --- منطق التنظيف الذكي (حل مشكلة الدمج) ---
-        # نقوم بمسح كل جمل الـ cout التي استُخدمت لطلب الإدخال لتبقى النتيجة فقط
-        prompts = re.findall(r'cout\s*<<\s*"(.*?)";', code)
-        clean_result = full_output
-        for p in prompts:
+        # --- منطق التنظيف الذكي الجديد ---
+        # نجلب النصوص التي تأتي قبل cin فقط (التي هي غالباً طلبات إدخال)
+        # ونترك النصوص التي تأتي في نهاية الكود أو لا يتبعها إدخال
+        clean_result = raw_output
+        
+        # استخراج جمل cout التي يتبعها cin مباشرة في الكود
+        prompts_to_remove = re.findall(r'cout\s*<<\s*"(.*?)";\s*cin\s*>>', code, re.DOTALL)
+        
+        for p in prompts_to_remove:
             clean_result = clean_result.replace(p, "")
         
         clean_result = clean_result.strip()
         
-        # إذا كانت النتيجة لا تزال فارغة (مثل حالة Hello Ali التي حُذفت بالخطأ)
-        # نتحقق إذا كان الكود لا يحتوي على سين (cin)، إذن نعرض المخرج كاملاً
-        inputs_needed = re.findall(r"cin\s*>>", code)
-        if not inputs_needed:
-            clean_result = full_output.strip()
+        # إذا كان الكود لا يحتوي على مدخلات أصلاً، اعرض المخرج كما هو بدون أي حذف
+        if "cin" not in code:
+            clean_result = raw_output.strip()
 
+        # النتيجة النهائية التي ستظهر للمستخدم
         final_text = clean_result if clean_result else "Executed successfully."
         
         # إرسال النتيجة نصياً
         bot.send_message(chat_id, f"💻 <b>النتيجة:</b>\n<pre>{final_text}</pre>", parse_mode="HTML")
 
-        # إرسال ملف PDF (نستخدم النتيجة النظيفة في التقرير)
+        # إرسال ملف PDF الشامل
         pdf_path = create_pdf(chat_id, code, inputs_data, final_text)
         with open(pdf_path, 'rb') as f:
             bot.send_document(chat_id, f, caption="📄 التقرير الشامل (Code + Inputs + Result)")
         os.remove(pdf_path)
 
     except Exception as e:
-        bot.send_message(chat_id, f"❌ حدث خطأ: {str(e)}")
+        bot.send_message(chat_id, f"❌ حدث خطأ تقني: {str(e)}")
     finally:
         if os.path.exists(file_cpp): os.remove(file_cpp)
         if os.path.exists(file_exe): os.remove(file_exe)

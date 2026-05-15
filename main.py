@@ -9,7 +9,7 @@ from fpdf import FPDF
 API_TOKEN = '8884141366:AAE01llBmMCrh82S7cOPIxkFAkxrbokoIL4'
 bot = telebot.TeleBot(API_TOKEN)
 
-BASE_DIR = r"C:\Users\Ali Altaee\Downloads\cc" 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 user_sessions = {}
 
 # ℹ️ معلومات الحقوق

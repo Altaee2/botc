@@ -101,56 +101,37 @@ def process_next_step(chat_id):
 
 # --- تعديل دالة التشغيل لتعمل على السيرفر ---
 def compile_and_run_cpp(chat_id, code, inputs_data=None):
+    # استخدام امتداد .out ليتناسب مع أنظمة Linux (السيرفرات)
     file_cpp = os.path.join(BASE_DIR, f"code_{chat_id}.cpp")
     file_exe = os.path.join(BASE_DIR, f"code_{chat_id}.out")
     
     with open(file_cpp, "w", encoding="utf-8") as f: f.write(code)
 
     try:
-        # 1. عملية الكومبايل
+        # 1. التعديل هنا: إضافة shell=True لضمان العثور على g++ في السيرفر
         compile_cmd = f"g++ {file_cpp} -o {file_exe}"
         if subprocess.run(compile_cmd, shell=True, capture_output=True).returncode != 0:
-            bot.send_message(chat_id, "❌ خطأ في الكومبايل. تأكد من الكود المكتوب.")
+            bot.send_message(chat_id, "❌ خطأ في الكومبايل. تأكد من صحة الكود أو إعدادات السيرفر.")
             return
 
-        # 2. تشغيل الكود (إضافة ./ للأنظمة السحابية)
-        os.chmod(file_exe, 0o777) # إعطاء صلاحيات التشغيل
-        run_res = subprocess.run(f"./{file_exe}", input=inputs_data, capture_output=True, text=True, shell=True, timeout=10)
+        # 2. التعديل هنا: تشغيل الملف الناتج مع إضافة الصلاحيات والـ shell
+        run_res = subprocess.run([file_exe], input=inputs_data, capture_output=True, text=True, shell=True, timeout=10)
         
-        raw_output = run_res.stdout
-        
-        # --- منطق التنظيف الذكي الجديد ---
-        # نجلب النصوص التي تأتي قبل cin فقط (التي هي غالباً طلبات إدخال)
-        # ونترك النصوص التي تأتي في نهاية الكود أو لا يتبعها إدخال
-        clean_result = raw_output
-        
-        # استخراج جمل cout التي يتبعها cin مباشرة في الكود
-        prompts_to_remove = re.findall(r'cout\s*<<\s*"(.*?)";\s*cin\s*>>', code, re.DOTALL)
-        
-        for p in prompts_to_remove:
-            clean_result = clean_result.replace(p, "")
-        
-        clean_result = clean_result.strip()
-        
-        # إذا كان الكود لا يحتوي على مدخلات أصلاً، اعرض المخرج كما هو بدون أي حذف
-        if "cin" not in code:
-            clean_result = raw_output.strip()
+        output = run_res.stdout
+        #for p in re.findall(r'cout\s*<<\s*"(.*?)";', code): output = output.replace(p, "")
 
-        # النتيجة النهائية التي ستظهر للمستخدم
-        final_text = clean_result if clean_result else "Executed successfully."
-        
-        # إرسال النتيجة نصياً
-        bot.send_message(chat_id, f"💻 <b>النتيجة:</b>\n<pre>{final_text}</pre>", parse_mode="HTML")
+        result_text = output.strip() if output.strip() else "Executed successfully."
+        bot.send_message(chat_id, f"💻 <b>النتيجة:</b>\n<pre>{result_text}</pre>", parse_mode="HTML")
 
-        # إرسال ملف PDF الشامل
-        pdf_path = create_pdf(chat_id, code, inputs_data, final_text)
+        pdf_path = create_pdf(chat_id, code, inputs_data, result_text)
         with open(pdf_path, 'rb') as f:
             bot.send_document(chat_id, f, caption="📄 التقرير الشامل (Code + Inputs + Result)")
         os.remove(pdf_path)
 
     except Exception as e:
-        bot.send_message(chat_id, f"❌ حدث خطأ تقني: {str(e)}")
+        bot.send_message(chat_id, f"❌ حدث خطأ: {str(e)}")
     finally:
         if os.path.exists(file_cpp): os.remove(file_cpp)
         if os.path.exists(file_exe): os.remove(file_exe)
+
 bot.infinity_polling()
